@@ -1,0 +1,125 @@
+name: 'Git-archive-all'
+description: 'Wrapper for git-archive, taking into account .gitattributes'
+branding:
+  icon: 'archive'
+  color: 'orange'
+
+inputs:
+  output-files:
+    description: 'Output file names, for example: "project.zip project.tar.gz"'
+    required: true
+  base-repo:
+    description: 'Main Git repository to archive, defaults to current path'
+    required: false
+  prefix:
+    description: 'Prefix to prepend to each filename in the archive'
+    required: false
+  export-ignore:
+    description: 'Follow export-ignore attributes in .gitatributes'
+    required: false
+    default: true
+  force-submodules:
+    description: 'Force `git submodule init && git submodule update` at each level before iterating submodules'
+    required: false
+    default: true
+  extra-includes:
+    description: 'Additional files to include in the archive'
+    required: false
+  compression-level:
+    description: 'Compression level; interpretation depends on output format'
+    required: false
+    default: '-9'
+  verbose:
+    description: 'Enable verbose mode'
+    required: false
+    default: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: 'Set base-repo'
+      run: |
+        # Pass -C with the path if the input is set
+        if [[ -n "${{ inputs.base-repo }}" ]]; then
+            echo "GAA_BASE_REPO=-C ${{ inputs.base-repo }}" >> "${GITHUB_ENV}"
+        fi
+      shell: bash
+    - name: 'Set prefix'
+      run: |
+        # Pass --prefix with prefix name if the input is set
+        if [[ -n "${{ inputs.prefix }}" ]]; then
+            echo "GAA_PREFIX=--prefix ${{ inputs.prefix }}" >> "${GITHUB_ENV}"
+        fi
+      shell: bash
+    - name: 'Set export-ignore'
+      run: |
+        # Set --no-export-ignore if the input is set to false
+        case "${{ inputs.export-ignore }}" in
+            false|False|FALSE|0|'')
+                echo "GAA_EXPORT_IGNORE=--no-export-ignore" >> "${GITHUB_ENV}"
+                ;;
+        esac
+      shell: bash
+    - name: 'Set force-submodules'
+      run: |
+        # Set --force-submodules unless the input is set to false
+        case "${{ inputs.force-submodules }}" in
+            false|False|FALSE|0|'')
+                ;;
+            *)
+                echo "GAA_FORCE_SUBMODULES=--force-submodules" >> "${GITHUB_ENV}"
+                ;;
+        esac
+      shell: bash
+    - name: 'Set extra-includes'
+      run: |
+        # Pass --include with the list of files if the input is set
+        if [[ -n "${{ inputs.extra-includes }}" ]]; then
+            echo "GAA_EXTRA_INCLUDES=--include ${{ inputs.extra-includes }}" >> "${GITHUB_ENV}"
+        fi
+      shell: bash
+    - name: 'Set compression-level'
+      run: |
+        # Pass compression level if format is consistent
+        case "${{ inputs.compression-level }}" in
+            -[0-9])
+                echo "GAA_COMPRESSION_LEVEL=${{ inputs.compression-level }}" >> "${GITHUB_ENV}"
+                ;;
+        esac
+      shell: bash
+    - name: 'Set verbose'
+      run: |
+        # Set -v unless the input is set to false
+        case "${{ inputs.verbose }}" in
+            false|False|FALSE|0|'')
+                ;;
+            *)
+                echo "GAA_VERBOSE=-v" >> "${GITHUB_ENV}"
+                ;;
+        esac
+      shell: bash
+    - name: 'Update $PATH'
+      run: echo "${{ github.action_path }}" >> "${GITHUB_PATH}"
+      shell: bash
+    - name: 'Run git_archive_all.py'
+      run: |
+        for file in ${{ inputs.output-files }}; do
+            COMPRESSION_LEVEL="${GAA_COMPRESSION_LEVEL}"
+            case ${file##*.} in
+                txz|xz)
+                    # https://github.com/Kentzo/git-archive-all/issues/91
+                    COMPRESSION_LEVEL=''
+                    ;;
+            esac
+
+            git_archive_all.py \
+                ${GAA_VERBOSE} \
+                ${GAA_BASE_REPO} \
+                ${GAA_PREFIX} \
+                ${GAA_EXPORT_IGNORE} \
+                ${GAA_FORCE_SUBMODULES} \
+                ${GAA_EXTRA_INCLUDES} \
+                ${COMPRESSION_LEVEL} \
+                "${file}"
+        done
+      shell: bash
