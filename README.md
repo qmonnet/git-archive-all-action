@@ -9,10 +9,10 @@ specified in `.gitattributes`.
 ### Required
 
 - `output-files`:
-  Output file names, for example: `project.zip project.tar.gz`. The output
-  format for the archive is deduced from the file extension. The formats
-  currently supported are: `tar`, `bz2`, `tgz`, `txz`, `bz2`, `gz`, `xz`, and
-  `zip`.
+  Output file names, as a space-separated list, for example: `project.zip
+  project.tar.gz`. The output format for the archive is deduced from the file
+  extension. The formats currently supported are: `tar`, `bz2`, `tgz`, `txz`,
+  `bz2`, `gz`, `xz`, and `zip`.
 
 ### Optional
 
@@ -31,7 +31,8 @@ specified in `.gitattributes`.
   iterating submodules, enabled by default.
 
 - `extra-includes`:
-  Additional files to include in the archive, empty by default.
+  Space-separated list of additional files to include in the archive, empty by
+  default.
 
 - `compression-level`:
   Compression level to use; interpretation depends on the output format. Set to
@@ -101,6 +102,15 @@ jobs:
   ```gitattributes
   assets/** export-ignore
   ```
+
+- The list of output files is space-separated, but in YAML, we can also use the
+  folded style operator (`>`) to rewrite the above example as follows:
+
+```yaml
+          output-files: >-
+            srcs-full-${{ github.ref_name }}.tar.gz
+            srcs-full-${{ github.ref_name }}.zip
+```
 
 ## Contributing
 

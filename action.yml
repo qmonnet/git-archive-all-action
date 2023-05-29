@@ -6,7 +6,7 @@ branding:
 
 inputs:
   output-files:
-    description: 'Output file names, for example: "project.zip project.tar.gz"'
+    description: 'Output file names (space-separated list), for example: "project.zip project.tar.gz"'
     required: true
   base-repo:
     description: 'Main Git repository to archive, defaults to current path'
@@ -23,7 +23,7 @@ inputs:
     required: false
     default: true
   extra-includes:
-    description: 'Additional files to include in the archive'
+    description: 'Additional files to include in the archive (space-separated list)'
     required: false
   compression-level:
     description: 'Compression level; interpretation depends on output format'
