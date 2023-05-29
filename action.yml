@@ -17,10 +17,12 @@ inputs:
   export-ignore:
     description: 'Follow export-ignore attributes in .gitatributes'
     required: false
+    type: boolean
     default: true
   force-submodules:
     description: 'Force `git submodule init && git submodule update` at each level before iterating submodules'
     required: false
+    type: boolean
     default: true
   extra-includes:
     description: 'Additional files to include in the archive (space-separated list)'
@@ -28,10 +30,12 @@ inputs:
   compression-level:
     description: 'Compression level; interpretation depends on output format'
     required: false
-    default: '-9'
+    type: number
+    default: 9
   verbose:
     description: 'Enable verbose mode'
     required: false
+    type: boolean
     default: true
 
 runs:
@@ -54,22 +58,16 @@ runs:
     - name: 'Set export-ignore'
       run: |
         # Set --no-export-ignore if the input is set to false
-        case "${{ inputs.export-ignore }}" in
-            false|False|FALSE|0|'')
-                echo "GAA_EXPORT_IGNORE=--no-export-ignore" >> "${GITHUB_ENV}"
-                ;;
-        esac
+        if [[ "${{ inputs.export-ignore }}" == "false" ]]; then
+            echo "GAA_EXPORT_IGNORE=--no-export-ignore" >> "${GITHUB_ENV}"
+        fi
       shell: bash
     - name: 'Set force-submodules'
       run: |
-        # Set --force-submodules unless the input is set to false
-        case "${{ inputs.force-submodules }}" in
-            false|False|FALSE|0|'')
-                ;;
-            *)
-                echo "GAA_FORCE_SUBMODULES=--force-submodules" >> "${GITHUB_ENV}"
-                ;;
-        esac
+        # Set --force-submodules if the input is set (or defaults) to true
+        if [[ "${{ inputs.force-submodules }}" == "true" ]]; then
+            echo "GAA_FORCE_SUBMODULES=--force-submodules" >> "${GITHUB_ENV}"
+        fi
       shell: bash
     - name: 'Set extra-includes'
       run: |
@@ -82,21 +80,17 @@ runs:
       run: |
         # Pass compression level if format is consistent
         case "${{ inputs.compression-level }}" in
-            -[0-9])
-                echo "GAA_COMPRESSION_LEVEL=${{ inputs.compression-level }}" >> "${GITHUB_ENV}"
+            [0-9])
+                echo "GAA_COMPRESSION_LEVEL=-${{ inputs.compression-level }}" >> "${GITHUB_ENV}"
                 ;;
         esac
       shell: bash
     - name: 'Set verbose'
       run: |
-        # Set -v unless the input is set to false
-        case "${{ inputs.verbose }}" in
-            false|False|FALSE|0|'')
-                ;;
-            *)
-                echo "GAA_VERBOSE=-v" >> "${GITHUB_ENV}"
-                ;;
-        esac
+        # Set -v unless the input is set (or defaults) to true
+        if [[ "${{ inputs.verbose }}" == "true" ]]; then
+            echo "GAA_VERBOSE=-v" >> "${GITHUB_ENV}"
+        fi
       shell: bash
     - name: 'Update $PATH'
       run: echo "${{ github.action_path }}" >> "${GITHUB_PATH}"

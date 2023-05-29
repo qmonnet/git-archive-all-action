@@ -34,9 +34,9 @@ specified in `.gitattributes`.
   Space-separated list of additional files to include in the archive, empty by
   default.
 
-- `compression-level`:
+- `compression-level` (number, 0 to 9):
   Compression level to use; interpretation depends on the output format. Set to
-  `-9` by default. Currently incompatible with `txz` and `xz` output formats.
+  `9` by default. Currently incompatible with `txz` and `xz` output formats.
 
 - `verbose` (boolean):
   Set verbose mode, enabled by default.
