@@ -1,0 +1,65 @@
+name: ci
+
+on:
+  pull_request
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  archive:
+    runs-on: ubuntu-latest
+    env:
+      FILE_PREFIX: /tmp/output/test-git-archive-all-action
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - name: Create output directory
+        run: mkdir -p ${FILE_PREFIX%/*}
+
+      - name: Archive files in repository
+        uses: ./
+        with:
+          output-files: >-
+            ${FILE_PREFIX}-default.tar.gz
+            ${FILE_PREFIX}-default.zip
+
+      - name: Check prefix (default case)
+        run: |
+          tar -tzf ${FILE_PREFIX}-default.tar.gz | \
+              tee /dev/stderr | grep -xFq "${FILE_PREFIX##*/}-default/action.yml"
+
+      - name: Archive files in repository, with prefix
+        uses: ./
+        with:
+          prefix: foobar
+          output-files: >-
+            ${FILE_PREFIX}-prefix.tar.gz
+            ${FILE_PREFIX}-prefix.zip
+
+      - name: Check prefix (default case)
+        run: |
+          tar -tzf ${FILE_PREFIX}-prefix.tar.gz | \
+              tee /dev/stderr | grep -xFq 'foobar/action.yml'
+
+      - name: Archive files in repository, with '/' as a prefix
+        uses: ./
+        with:
+          prefix: '/'
+          output-files: >-
+            ${FILE_PREFIX}-noprefix.tar.gz
+            ${FILE_PREFIX}-noprefix.zip
+
+      - name: Check prefix ('/')
+        run: |
+          tar -tzf ${FILE_PREFIX}-noprefix.tar.gz | \
+              tee /dev/stderr | grep -xFq 'action.yml'
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4.3.4
+        with:
+          path: /tmp/output/*
+          retention-days: 7
