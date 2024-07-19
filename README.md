@@ -21,7 +21,13 @@ specified in `.gitattributes`.
   directory.
 
 - `prefix`:
-  Prefix to prepend to each filename in the archive, empty by default.
+  Prefix to prepend to each filename in the archive, defaults to the base name
+  of the output file without its extension (in the example above: `project`).
+  For example, if using `output-files: project.zip` and passing no `prefix`,
+  the generated archive contains a root directory named `project`. Note that
+  explicitly passing an empty prefix is the same as not setting the option, and
+  falls back to the default behaviour. To have all compressed items at the root
+  of the generated archive, pass `'/'` as a prefix.
 
 - `export-ignore` (boolean):
   Follow `export-ignore` attributes from `.gitattributes`, enabled by default.
