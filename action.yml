@@ -50,10 +50,8 @@ runs:
       shell: bash
     - name: 'Set prefix'
       run: |
-        # Pass --prefix with prefix name if the input is set
-        if [[ -n "${{ inputs.prefix }}" ]]; then
-            echo "GAA_PREFIX=--prefix ${{ inputs.prefix }}" >> "${GITHUB_ENV}"
-        fi
+        # Pass --prefix with prefix name
+        echo "GAA_PREFIX=--prefix=${{ inputs.prefix }}" >> "${GITHUB_ENV}"
       shell: bash
     - name: 'Set export-ignore'
       run: |
